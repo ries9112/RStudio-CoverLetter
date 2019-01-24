@@ -1,0 +1,120 @@
+---
+name: Riccardo Esclapon
+# position: "Data Analyst"
+# address: "705 36th Street"
+phone: +1 425 894 7732
+#profilepic: linkedin.PNG
+www: resclapon.com
+email: "ries9112@colorado.edu"
+linkedin: esclaponriccardo
+date: "`r format(Sys.time(), '%B %Y')`"
+aboutme: "I am passionate about data collection, processing, visualization, predictive modeling and database management and I think almost anyone can understand these concepts if they are given practical contexts. I especially love the idea of teaching others by communicating results through data driven applications. [Click for resume](https://resclapon.com/resume/)"
+output: vitae::twentyseconds
+params:
+  date: !r Sys.Date()
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(vitae)
+library(ggplot2)
+library(plotly)
+library(DBI)
+library(lubridate)
+```
+
+# Dear Hiring Manager at RStudio,
+
+I am currently a student pursuing a Master’s degree in business analytics, and am beyond excited to be applying for a 2019 summer internship position at RStudio. Being able to learn from the creators themselves would be an incredible opportunity, to say the least. 
+I’m doing the Master’s degree part time so that I can develop independent projects, which you can find on my website, www.resclapon.com. My main data testing ground, www.predictcrypto.com, collects data for the top 3500 cryptocurrencies from 10 different sources on an hourly basis and then uploads all that information live to a Google Cloud SQL database that is then accessed and visualized through applications made in R Shiny. R and RStudio stood out to me as the best environment to translate my ideas and hours of work into an actual application, and flexdashboards make it remarkably easy and quick to do that. R and RStudio have changed my approach on everything and have taught me how incredibly easy it is to take other brilliant people’s open source work and adapt it to other relevant problems, but it also made me realize how incredibly bad every professor I had through my University was at generating interest in the R programming language and how they were focusing on the totally wrong things; for example, I think R Markdown files should not be a big secret reserved for seasoned developers. Because I became so enthusiastic about the power of R and RStudio, I created a tutorial for my young Italian cousins ( [click here]( https://resclapon.com/r-tutorial/)), based on the package developed by your team called "learnr", so that they can learn R. I am working on a few other independent projects (on ski lift prices, on real estate trends, and on data analysis for a crowdfunding website), as well as working with a professor on a research paper for publication this year analyzing the relationship between news sentiment and cryptocurrency price changes. 
+Here is why I believe I would be an excellent addition to the team of interns:
+
+-	I am truly passionate about data analytics. I wake up every morning with the desire to advance my projects, skills and applications and everything else comes second. 
+-	From the second I wake up to the second I go to bed, I leverage the tools created by the RStudio team to either improve my own or someone else’s knowledge on working with R and RStudio.
+-	I have a skillset that is adaptable and catered towards real world problems, and I can build projects that handle the entire ETL process in a completely automated fashion.
+-	I have lots of practical experience with R, Python and SQL and I recognize the fact that results and analysis are only as powerful as the simplicity by which they are communicated.
+
+I very much look forward to hearing from you.
+
+Best regards, 
+
+Riccardo Esclapon
+ 
+
+```{r}
+#SQL Connection
+con <-dbConnect(RMySQL::MySQL(),username = 'ricky',password = 'grandegenio',host = '35.202.154.254',dbname = 'Octoparse')
+```
+
+\hfill\break
+\hfill\break
+\hfill\break
+## The code below and on the next page was all dynamically generated based on the current date(UTC) when you clicked on "Generate Cover Letter".
+
+This cover letter was written as an R Markdown (.Rmd) file, which supports code for 50 different programming languages. You triggered a SQL connection and code in both SQL and R, shown below.
+\hfill\break
+Look at the number of tables in the database by running this SQL query:
+
+```{sql, connection=con, output.var="DatabaseStats", echo = T}
+SELECT 
+    count(TABLE_NAME) as 'Tables'
+FROM 
+    `information_schema`.`tables` 
+WHERE 
+    `table_schema` = 'Octoparse';
+```
+
+How many tables are in the SQL database?
+```{r, echo=F}
+paste("Total tables in database as of ", Sys.Date(),": ", 
+      DatabaseStats$Tables, sep="")
+```
+
+\hfill\break
+\hfill\break
+## This next section shows one data point per hour from the cryptocurrency prices table. The rank is determined by what day of the month it currently is. For example, if it is January 12th, the chart will show the Market Capitalization($) for January 12th for the cryptocurrency ranked #12 by Market Capitalization. The DateTime field is in Coordinated Universal Time (UTC).
+
+```{r}
+rankFromDate <- as.numeric(day(Sys.Date()))
+minDate <- Sys.Date()-1
+```
+
+```{sql, connection=con, output.var="CryptoPricesH"}
+SELECT Today, Rank, Symbol, Name, MarketCap, DateTime FROM(
+SELECT DISTINCT
+    DAY(CURRENT_DATE) as 'Today', Rank, Symbol, Name, Price, DateTime, Date, MarketCap
+FROM 
+    Prices  
+WHERE 
+    IF(
+    (SELECT HOUR(CURRENT_DATE) < 17) = 1, 
+    Rank = ?rankFromDate AND Date > (SELECT CURRENT_DATE - INTERVAL 1 DAY), Rank = ?rankFromDate)
+    AND
+    IF(
+    (SELECT HOUR(CURRENT_DATE) > 16) = 1, 
+    Rank = ?rankFromDate AND Date > (SELECT CURRENT_DATE - INTERVAL 2 DAY), Rank = ?rankFromDate)
+) sq
+```
+
+```{r}
+CryptoPricesH
+```
+
+```{r, size = 'tiny'}
+CryptoPricesH$DateTime <- as.POSIXct(strptime(CryptoPricesH$DateTime, '%Y-%m-%d %H:%M:%S',tz='UTC'))
+
+ggplot(data = CryptoPricesH, aes(x = DateTime, y = MarketCap))+
+  geom_line()+
+  xlab("DateTime(UTC)")+
+  ylab("Market Capitalization($)")
+```
+
+Current DateTime in UTC
+```{r, echo=T}
+Sys.time()
+```
+
+Disconnect from SQL server
+```{r, echo=T}
+dbDisconnect(con)
+```
